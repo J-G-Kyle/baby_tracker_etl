@@ -1,0 +1,67 @@
+asher:
+  diaper:
+    CREATE OR REPLACE TABLE diaper (
+    baby VARCHAR,
+    time TIME,
+    status VARCHAR,
+    note VARCHAR,
+    date DATE);
+  expressed:
+    CREATE OR REPLACE TABLE expressed (
+    baby VARCHAR,
+    time TIME,
+    amount_ml INT,
+    note VARCHAR,
+    date DATE);
+  formula:
+    CREATE OR REPLACE TABLE formula (
+    baby VARCHAR,
+    time TIME,
+    amount_ml INT,
+    note VARCHAR,
+    date DATE);
+  growth:
+    CREATE OR REPLACE TABLE growth (
+    baby VARCHAR,
+    time TIME,
+    length_cm INT,
+    weight_kg INT,
+    head_size_cm INT,
+    note VARCHAR,
+    date DATE);
+  nursing:
+    CREATE OR REPLACE TABLE nursing (
+    baby VARCHAR,
+    time TIME,
+    start_side VARCHAR,
+    left_duration_min INT,
+    right_duration_min INT,
+    total_duration_min INT,
+    note VARCHAR,
+    date DATE);
+  sleep:
+    CREATE OR REPLACE TABLE sleep (
+    baby VARCHAR,
+    time TIME,
+    duration_min INT,
+    note VARCHAR,
+    date DATE);
+  pump:
+    CREATE OR REPLACE TABLE pump (
+    time TIME,
+    start_side VARCHAR,
+    left_duration_min INT,
+    right_duration_min INT,
+    total_duration_min INT,
+    left_amount_ml INT,
+    right_amount_ml INT,
+    total_amount_ml INT,
+    note VARCHAR,
+    date DATE);
+  milestone:
+    CREATE OR REPLACE TABLE milestone (
+    baby VARCHAR,
+    time TIME,
+    milestone VARCHAR,
+    note VARCHAR,
+    date DATE);
