@@ -3,11 +3,17 @@ import logging
 import re
 import os
 from collections import defaultdict
+from datetime import datetime
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()])
 
 def csv_time_column_fix(inputfile:str, outputfile:str):
     """
     Clean the Baby Tracker output csvs to remove comma in 'Time' column, and split the column into separate time and date columns
-    Writes a new
+    Saves a new cleaned csv to the outputfile path
     :param inputfile: string path of input csv
     :param outputfile: string path of output csv
     """
@@ -23,11 +29,14 @@ def csv_time_column_fix(inputfile:str, outputfile:str):
         with open(outputfile, mode='w', newline='') as outfile:
             writer = csv.DictWriter(outfile, fieldnames=headers)
             writer.writeheader()
-
+            logger.debug(f"{outfile} to be written to")
             for row in csvFile:
-                # Split Time:"dd/mm/yyyy, hh:mm" into Date:"dd/mm/yyyy" and Time:"hh:mm"
-                date_str = re.search(r"\d{2}\/\d{2}\/\d{4}", row['Time']).group()
-                time_str = re.search(r", (\d{2}:\d{2})", row['Time']).group(1)
+                try:
+                    # Split Time:"dd/mm/yyyy, hh:mm" into Date:"dd/mm/yyyy" and Time:"hh:mm"
+                    date_str = re.search(r"\d{2}\/\d{2}\/\d{4}", row['Time']).group()
+                    time_str = re.search(r", (\d{2}:\d{2})", row['Time']).group(1)
+                except Exception as e:
+                    logger.warning(f"{e} in {inputfile}")
                 row['Date'] = date_str
                 row['timeonly'] = time_str
 
@@ -63,11 +72,13 @@ def rename_csv_headers(inputfile:str, outputfile:str):
             writer = csv.writer(outfile)
             writer.writerows(rows)
 
-def split_csv_into_days(inputfile:str, outputdir:str):
+def split_csv_into_days(inputfile:str, outputdir:str, maxdate:str = None):
     """
     Split the csv file into separate csvs, one per date. Files will be named yyyymmdd_<input file name>.
     :param inputfile: path to csv file to be split by date
     :param outputdir: directory where single date files will be written
+    :param maxdate: optional parameter. If passed, function will only return files with a date greater than the param
+                    must be a string in format yyyymmdd
     """
     if not inputfile.endswith('.csv'):
         return logging.warning(f"{inputfile} is not a csv")
@@ -82,9 +93,15 @@ def split_csv_into_days(inputfile:str, outputdir:str):
         headers = reader.fieldnames
 
         # Group each row by date
+        if maxdate is not None: maxdate = datetime.strptime(maxdate, '%Y%m%d')
         for row in reader:
             date = row['date']
-            data_by_date[date].append(row)
+            if maxdate is not None:
+                rowdate = datetime.strptime(date, '%d/%m/%Y')
+                if rowdate > maxdate:
+                    data_by_date[date].append(row)
+            else:
+                data_by_date[date].append(row)
 
     check_output_directory(outputdir)
 
@@ -106,16 +123,20 @@ def check_output_directory(output_directory:str):
     if not os.path.isdir(output_directory): os.mkdir(output_directory)
 
 if __name__ == "__main__":
-    inputdir = '../data/'
-    outputdir_staging = '../data/staging/'
-    outputdir_clean = '../data/clean'
+    inputdir = '../assets/data/'
+    outputdir_staging = '../assets/data/staging/'
+    outputdir_clean = '../assets/data/clean'
     check_output_directory(outputdir_staging)
-    all_input_files = [f for f in os.listdir(inputdir) if os.path.isfile(os.path.join(inputdir, f))]
+    all_input_files = [f for f in os.listdir(inputdir)
+                       if os.path.isfile(os.path.join(inputdir, f))
+                       and os.path.splitext(f)[1] == '.csv']
     for f in all_input_files:
         csv_time_column_fix(os.path.join(inputdir,f), os.path.join(outputdir_staging,f))
 
 
-    all_staged_files = [f for f in os.listdir(outputdir_staging) if os.path.isfile(os.path.join(outputdir_staging, f))]
+    all_staged_files = [f for f in os.listdir(outputdir_staging)
+                        if os.path.isfile(os.path.join(outputdir_staging, f))
+                        and os.path.splitext(f)[1] == '.csv']
     for f in all_staged_files:
         rename_csv_headers(os.path.join(outputdir_staging, f), os.path.join(outputdir_staging, f))
         split_csv_into_days(os.path.join(outputdir_staging, f), outputdir_clean)

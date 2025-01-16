@@ -1,0 +1,4 @@
+duckdb~=1.1.2
+duckdb-engine~=0.14.2
+PyYAML~=6.0.2
+watchdog~=6.0.0

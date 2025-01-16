@@ -1,4 +1,8 @@
 asher:
+  alltables:
+    ["diaper", "expressed", "formula", "growth",
+    "nursing", "sleep", "pump", "milestone",
+     "vaccine", "medication", "temperature"]
   diaper:
     CREATE OR REPLACE TABLE diaper (
     baby VARCHAR,
@@ -65,3 +69,29 @@ asher:
     milestone VARCHAR,
     note VARCHAR,
     date DATE);
+  vaccine:
+    CREATE OR REPLACE TABLE vaccine (
+    baby VARCHAR,
+    time TIME,
+    vaccine VARCHAR,
+    description VARCHAR,
+    note VARCHAR,
+    date DATE);
+  medication:
+    CREATE OR REPLACE TABLE medication (
+    baby VARCHAR,
+    time TIME,
+    medication VARCHAR,
+    description VARCHAR,
+    amount FLOAT,
+    unit VARCHAR,
+    note VARCHAR,
+    date DATE);
+  temperature:
+    CREATE OR REPLACE TABLE temperature (
+    baby VARCHAR,
+    time TIME,
+    temperature VARCHAR,
+    note VARCHAR,
+    date DATE
+    );

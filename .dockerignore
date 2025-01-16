@@ -1,0 +1,10 @@
+*
+#!assets
+!config
+!docker
+!logs
+!pipeline
+!logs
+!README.md
+!README_sublime.md
+!requirements.txt
