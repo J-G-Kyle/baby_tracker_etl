@@ -1,8 +1,9 @@
 import os
-import duckdb
 import logging
 import yaml
 from pathlib import Path
+from duckdb_setup import connect_to_baby_database
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
@@ -59,18 +60,21 @@ def import_csv_to_duckdb(input_files: list, database_connection: object, file_di
         else: logger.warning(f"{filename} could not be imported - no matching table in duckdb")
 
 def cleanup_folder(input_directory: str, input_files: list):
-
+    """Cleanup the input_directory by deleting all csv files within it that are provided in input_files
+    :param input_directory: path to directory to be cleaned
+    :param input_files: list of all the files to be deleted from the directory"""
     for f in input_files:
         f = os.path.join(os.path.join(input_directory, f))
-        if os.path.isfile(f):
+        if os.path.isfile(f) and os.path.splitext(f)[1] == '.csv':
             try:
                 Path.unlink(f)
             except Exception as e:
                 logging.warning(e)
 
 if __name__ == "__main__":
+
     outputdir_clean = '../assets/data/clean'
-    con = duckdb.connect("../assets/asher.duckdb")
+    con = connect_to_baby_database()
     all_input_files = [f for f in os.listdir(outputdir_clean)
                        if os.path.isfile(os.path.join(outputdir_clean, f))
                        and os.path.splitext(f)[1] == '.csv']

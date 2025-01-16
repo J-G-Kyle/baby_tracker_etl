@@ -1,4 +1,6 @@
 asher:
+  database:
+    "../assets/asher.duckdb"
   alltables:
     ["diaper", "expressed", "formula", "growth",
     "nursing", "sleep", "pump", "milestone",

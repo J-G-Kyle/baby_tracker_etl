@@ -4,6 +4,7 @@ import re
 import os
 from collections import defaultdict
 from datetime import datetime
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
@@ -140,3 +141,4 @@ if __name__ == "__main__":
     for f in all_staged_files:
         rename_csv_headers(os.path.join(outputdir_staging, f), os.path.join(outputdir_staging, f))
         split_csv_into_days(os.path.join(outputdir_staging, f), outputdir_clean)
+    logger.info(f"{','.join(all_staged_files)} cleaned and staged")
