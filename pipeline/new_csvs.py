@@ -1,15 +1,18 @@
-import os, sys
+import os
+import sys
 import logging
 from datetime import datetime
 from fix_csv import csv_time_column_fix, rename_csv_headers, split_csv_into_days
 import duckdb_import
 from duckdb_setup import connect_to_baby_database
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler("../logs/import.log"),
-              logging.StreamHandler()])
+    handlers=[logging.FileHandler("../logs/import.log"), logging.StreamHandler()],
+)
+
 
 def maximum_date_from_table(tablename: str) -> str:
     """
@@ -18,12 +21,14 @@ def maximum_date_from_table(tablename: str) -> str:
     :returns the maximum date in the table as a string in format yyyymmdd
     """
     database_connection = connect_to_baby_database()
-    maxdate = database_connection.sql(f"SELECT MAX(date) FROM raw.{tablename};").fetchone()
+    maxdate = database_connection.sql(
+        f"SELECT MAX(date) FROM raw.{tablename};"
+    ).fetchone()
     if maxdate[0] is None:
         maxdate = (datetime.min.date(),)
     # connect.sql.fetchone() returns a tuple object, of which the date is in datetime format
     maxdate = maxdate[0].isoformat()
-    maxdate = str.replace(maxdate, '-', '')
+    maxdate = str.replace(maxdate, "-", "")
 
     return maxdate
 
@@ -34,9 +39,9 @@ if __name__ == "__main__":
     else:
         file_path = sys.argv[1]
 
-        inputdir = '../data/'
-        outputdir_staging = '../data/staging/'
-        outputdir_clean = '../data/clean'
+        inputdir = "../data/"
+        outputdir_staging = "../data/staging/"
+        outputdir_clean = "../data/clean"
 
         # get the file path from watchdog
         new_file_path = sys.argv[1]
@@ -51,20 +56,34 @@ if __name__ == "__main__":
 
         # For each new file, fix the time columns, rename headers, and split into days where the date is greater than
         # the newest data in the table
-        csv_time_column_fix(os.path.join(inputdir, new_file_name), os.path.join(outputdir_staging, new_file_name))
-        rename_csv_headers(os.path.join(outputdir_staging, new_file_name), os.path.join(outputdir_staging, new_file_name))
-        split_csv_into_days(os.path.join(outputdir_staging, new_file_name), outputdir_clean, newestdata)
+        csv_time_column_fix(
+            os.path.join(inputdir, new_file_name),
+            os.path.join(outputdir_staging, new_file_name),
+        )
+        rename_csv_headers(
+            os.path.join(outputdir_staging, new_file_name),
+            os.path.join(outputdir_staging, new_file_name),
+        )
+        split_csv_into_days(
+            os.path.join(outputdir_staging, new_file_name), outputdir_clean, newestdata
+        )
 
         # create a list of the newest files
-        newest_files = [f for f in os.listdir(outputdir_clean) if os.path.isfile(os.path.join(outputdir_clean, f)) \
-                        and f.split('_', 1)[0] > newestdata]
+        newest_files = [
+            f
+            for f in os.listdir(outputdir_clean)
+            if os.path.isfile(os.path.join(outputdir_clean, f))
+            and f.split("_", 1)[0] > newestdata
+        ]
 
         database_connection = connect_to_baby_database()
         # load them into duckDB
         if len(newest_files) == 0:
             logger.info("No new data imported")
         else:
-            duckdb_import.import_csv_to_duckdb(newest_files, database_connection, outputdir_clean)
+            duckdb_import.import_csv_to_duckdb(
+                newest_files, database_connection, outputdir_clean
+            )
             logger.info(f"All new data successfully imported from {new_file_path}")
             duckdb_import.cleanup_folder(outputdir_clean, newest_files)
             logger.info(f"{len(newest_files)} files removed from {outputdir_clean}")
