@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from fix_csv import csv_time_column_fix, rename_csv_headers, split_csv_into_days
 import duckdb_import
-from duckdb import connect
+from duckdb_setup import connect_to_baby_database
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
@@ -17,8 +17,8 @@ def maximum_date_from_table(tablename: str) -> str:
     :param tablename the name of the required table in the raw schema
     :returns the maximum date in the table as a string in format yyyymmdd
     """
-    con = connect("../assets/asher.duckdb")
-    maxdate = con.sql(f"SELECT MAX(date) FROM raw.{tablename};").fetchone()
+    database_connection = connect_to_baby_database()
+    maxdate = database_connection.sql(f"SELECT MAX(date) FROM raw.{tablename};").fetchone()
     if maxdate[0] is None:
         maxdate = (datetime.min.date(),)
     # connect.sql.fetchone() returns a tuple object, of which the date is in datetime format
@@ -30,7 +30,7 @@ def maximum_date_from_table(tablename: str) -> str:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        logger.warning("No file name provided!")
+        logger.warning("No file name provided by watchdog_etl!")
     else:
         file_path = sys.argv[1]
 
@@ -59,12 +59,12 @@ if __name__ == "__main__":
         newest_files = [f for f in os.listdir(outputdir_clean) if os.path.isfile(os.path.join(outputdir_clean, f)) \
                         and f.split('_', 1)[0] > newestdata]
 
-        con = connect("../assets/asher.duckdb")
+        database_connection = connect_to_baby_database()
         # load them into duckDB
         if len(newest_files) == 0:
             logger.info("No new data imported")
         else:
-            duckdb_import.import_csv_to_duckdb(newest_files, con, outputdir_clean)
+            duckdb_import.import_csv_to_duckdb(newest_files, database_connection, outputdir_clean)
             logger.info(f"All new data successfully imported from {new_file_path}")
             duckdb_import.cleanup_folder(outputdir_clean, newest_files)
             logger.info(f"{len(newest_files)} files removed from {outputdir_clean}")

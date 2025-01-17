@@ -2,7 +2,7 @@ import os
 import logging
 import yaml
 from pathlib import Path
-from duckdb_setup import connect_to_baby_database
+from pipeline.duckdb_setup import connect_to_baby_database
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -16,7 +16,10 @@ def find_table_name(inputfile:str) -> str:
     :param inputfile: String filename
     :return: table name as written in the list if found in the input file
     """
-    with open('../assets/table_config.yaml', 'r') as f:
+    relative_path = Path('../assets/table_config.yaml')
+    module_dir = Path(__file__).parent
+    file_path = module_dir / relative_path
+    with open(file_path, 'r') as f:
         table_config = yaml.safe_load(f)
         f.close()
 
@@ -27,17 +30,6 @@ def find_table_name(inputfile:str) -> str:
         return table[0]
     else:
         logger.warning(f"No matching table could be found for {inputfile}")
-
-    # Use these as basis for pytest test
-        # case "diaper": return "diaper"
-        # case "expressed": return "expressed"
-        # case "formula": return "formula"
-        # case "growth": return "growth"
-        # case "milestone": return "milestone"
-        # case "nursing": return "nursing"
-        # case "sleep": return "sleep"
-        # case "pump": return "pump"
-        # case _: return None
 
 def import_csv_to_duckdb(input_files: list, database_connection: object, file_directory: str):
     """
