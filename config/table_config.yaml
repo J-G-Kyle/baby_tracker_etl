@@ -1,44 +1,47 @@
 asher:
   database:
-    "../assets/asher.duckdb"
+    "/../../evidence/sources/baby_tracker_data/baby.duckdb"
   alltables:
     ["diaper", "expressed", "formula", "growth",
     "nursing", "sleep", "pump", "milestone",
      "vaccine", "medication", "temperature"]
+  limitedtables:
+    ["diaper", "growth",
+    "nursing", "sleep"]
   diaper:
     CREATE OR REPLACE TABLE diaper (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     status VARCHAR,
     note VARCHAR,
     date DATE);
   expressed:
     CREATE OR REPLACE TABLE expressed (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     amount_ml INT,
     note VARCHAR,
     date DATE);
   formula:
     CREATE OR REPLACE TABLE formula (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     amount_ml INT,
     note VARCHAR,
     date DATE);
   growth:
     CREATE OR REPLACE TABLE growth (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     length_cm INT,
-    weight_kg INT,
+    weight_kg FLOAT,
     head_size_cm INT,
     note VARCHAR,
     date DATE);
   nursing:
     CREATE OR REPLACE TABLE nursing (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     start_side VARCHAR,
     left_duration_min INT,
     right_duration_min INT,
@@ -48,13 +51,13 @@ asher:
   sleep:
     CREATE OR REPLACE TABLE sleep (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     duration_min INT,
     note VARCHAR,
     date DATE);
   pump:
     CREATE OR REPLACE TABLE pump (
-    time TIME,
+    timestamp TIMESTAMP,
     start_side VARCHAR,
     left_duration_min INT,
     right_duration_min INT,
@@ -67,14 +70,14 @@ asher:
   milestone:
     CREATE OR REPLACE TABLE milestone (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     milestone VARCHAR,
     note VARCHAR,
     date DATE);
   vaccine:
     CREATE OR REPLACE TABLE vaccine (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     vaccine VARCHAR,
     description VARCHAR,
     note VARCHAR,
@@ -82,7 +85,7 @@ asher:
   medication:
     CREATE OR REPLACE TABLE medication (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     medication VARCHAR,
     description VARCHAR,
     amount FLOAT,
@@ -92,7 +95,7 @@ asher:
   temperature:
     CREATE OR REPLACE TABLE temperature (
     baby VARCHAR,
-    time TIME,
+    timestamp TIMESTAMP,
     temperature VARCHAR,
     note VARCHAR,
     date DATE

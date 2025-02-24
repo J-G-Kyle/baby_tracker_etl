@@ -1,10 +1,14 @@
 *
-#!assets
+!config
 !config
 !docker
 !logs
 !pipeline
 !logs
+#!evidence
 !README.md
 !README_sublime.md
 !requirements.txt
+!Makefile
+!Dockerfile
+!evidence/bootstrap.sh

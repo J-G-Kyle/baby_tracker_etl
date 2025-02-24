@@ -4,6 +4,9 @@ import re
 import os
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
+from duckdb_import import check_table_exists, find_table_name, cleanup_folder
+from duckdb_setup import connect_to_baby_database
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -15,7 +18,7 @@ logging.basicConfig(
 
 def csv_time_column_fix(inputfile: str, outputfile: str):
     """
-    Clean the Baby Tracker output csvs to remove comma in 'Time' column, and split the column into separate time and date columns
+    Clean the Baby Tracker output csvs to remove comma in 'Time' column, and split the column into separate timestamp and date columns
     Saves a new cleaned csv to the outputfile path
     :param inputfile: string path of input csv
     :param outputfile: string path of output csv
@@ -41,12 +44,19 @@ def csv_time_column_fix(inputfile: str, outputfile: str):
                 except Exception as e:
                     logger.warning(f"{e} in {inputfile}")
                 row["Date"] = date_str
-                row["timeonly"] = time_str
+                # Convert the time string to ISO 8601 timestamp to prevent duckdb import error
+                ISO_date_str = datetime.strptime(date_str, "%d/%m/%Y").strftime(
+                    "%Y-%m-%d"
+                )
+                time_dt = datetime.strptime(time_str, "%H:%M").strftime("%H:%M:%S")
+                ISO_8601_datetime = " ".join([ISO_date_str, time_dt])
+
+                row["timestamp"] = ISO_8601_datetime
 
                 # Replace previous time value with new time only value
                 if "Time" in row:
                     # del row['Time']
-                    row["Time"] = row.pop("timeonly")
+                    row["Time"] = row.pop("timestamp")
 
                 writer.writerow(row)
 
@@ -68,6 +78,7 @@ def rename_csv_headers(inputfile: str, outputfile: str):
             h = re.sub(r"[\(\)]", "", h)
             h = re.sub(r"\s", "_", h)
             h = h.replace("durationminutes", "duration_min")
+            h = h.replace("time", "timestamp")
             newheaders.append(h)
 
         rows[0] = newheaders
@@ -132,9 +143,13 @@ def check_output_directory(output_directory: str):
 
 
 if __name__ == "__main__":
-    inputdir = "../assets/data/"
-    outputdir_staging = "../assets/data/staging/"
-    outputdir_clean = "../assets/data/clean"
+    module_dir = Path(__file__).parent
+    inputdir_relative_path = "/../../evidence/data/"
+    inputdir = module_dir / inputdir_relative_path
+    outputdir_staging_relative_path = "data/staging/"
+    outputdir_staging = module_dir / outputdir_staging_relative_path
+    outputdir_clean_relative_path = "data/clean"
+    outputdir_clean = module_dir / outputdir_clean_relative_path
     check_output_directory(outputdir_staging)
     all_input_files = [
         f
@@ -153,9 +168,21 @@ if __name__ == "__main__":
         if os.path.isfile(os.path.join(outputdir_staging, f))
         and os.path.splitext(f)[1] == ".csv"
     ]
+
+    con = connect_to_baby_database()
+
     for f in all_staged_files:
         rename_csv_headers(
             os.path.join(outputdir_staging, f), os.path.join(outputdir_staging, f)
         )
+
+        # Check table exists for each staged file, otherwise create it
+        table_name = find_table_name(f)
+        check_table_exists("raw", table_name, con)
+
         split_csv_into_days(os.path.join(outputdir_staging, f), outputdir_clean)
+
     logger.info(f"{','.join(all_staged_files)} cleaned and staged")
+
+    # Cleanup staged files
+    cleanup_folder(outputdir_staging, all_staged_files)
