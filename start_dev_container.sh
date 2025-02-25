@@ -11,7 +11,6 @@ docker run -d \
 -it \
 --rm \
 --name baby_tracker_container \
-baby_tracker_image_evidence \
---init
+baby_tracker_image_evidence
 
 echo "Evidence.dev available at localhost:3000 once docker container setup is complete"
